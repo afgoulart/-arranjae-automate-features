@@ -390,12 +390,41 @@ NODE_ENV=development
 
 ### Como Obter as Credenciais
 
-#### Cursor API Token
+#### Configuração de Provedor de AI
 
-1. Acesse as configurações do Cursor: `https://cursor.sh/settings` ou através do menu do Cursor
-2. Navegue até a seção de API/Integrations
-3. Gere um novo token ou copie o token existente
-4. Cole o token no arquivo `.env` como `CURSOR_API_TOKEN`
+O sistema suporta múltiplos provedores de AI através de variáveis de ambiente:
+
+**Variáveis:**
+
+- `PROMPT_AI_TYPE`: Tipo do provedor (`CURSOR` ou `CLAUDE_CODE`) - padrão: `CURSOR`
+- `PROMPT_AI_KEY`: Chave de API do provedor escolhido
+
+**Cursor:**
+
+1. Acesse: `https://cursor.sh/settings`
+2. Navegue até API/Integrations
+3. Gere ou copie o token
+4. Configure:
+   ```env
+   PROMPT_AI_TYPE=CURSOR
+   PROMPT_AI_KEY=seu_token_aqui
+   ```
+
+**Claude Code:**
+
+1. Acesse: `https://console.anthropic.com/`
+2. Crie conta/login
+3. Navegue até API Keys
+4. Gere uma API key
+5. Configure:
+   ```env
+   PROMPT_AI_TYPE=CLAUDE_CODE
+   PROMPT_AI_KEY=sua_api_key_aqui
+   ```
+
+**Compatibilidade:**
+
+- `CURSOR_API_TOKEN` ainda funciona para compatibilidade
 
 #### GitHub Token
 

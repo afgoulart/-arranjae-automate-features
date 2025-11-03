@@ -1,4 +1,10 @@
-import { PipelineConfig, ProcessOptions, ProcessResult, ReviewResult } from '../types';
+import {
+  PipelineConfig,
+  PipelineConfigInternal,
+  ProcessOptions,
+  ProcessResult,
+  ReviewResult,
+} from '../types';
 import { CodeGenerator } from './CodeGenerator';
 import { CodeReviewer } from './CodeReviewer';
 import { BranchGenerator } from '../generators/BranchGenerator';
@@ -9,7 +15,7 @@ import { PRGenerator } from '../generators/PRGenerator';
  * Main Pipeline class for orchestrating the development automation workflow
  */
 export class Pipeline {
-  private config: Required<PipelineConfig>;
+  private config: PipelineConfigInternal;
   private codeGenerator: CodeGenerator;
   private codeReviewer: CodeReviewer;
   private branchGenerator?: BranchGenerator;
@@ -17,13 +23,24 @@ export class Pipeline {
   private prGenerator?: PRGenerator;
 
   constructor(config: PipelineConfig) {
-    // Validate required config
-    if (!config.cursorApiToken) {
-      throw new Error('Cursor API token is required');
+    // PROMPT_AI_KEY é a variável única que funciona para qualquer tipo de AI (CURSOR ou CLAUDE_CODE)
+    const aiToken =
+      config.cursorApiToken || process.env.PROMPT_AI_KEY || process.env.CURSOR_API_TOKEN;
+    // apiUrl pode ser passado como parâmetro ou vir de variável de ambiente
+    const apiUrl = config.apiUrl || process.env.PROMPT_API_URL;
+
+    if (!aiToken) {
+      throw new Error(
+        'AI provider token/key is required. ' +
+          'Provide cursorApiToken in config or set PROMPT_AI_KEY environment variable. ' +
+          'PROMPT_AI_KEY funciona para qualquer tipo de AI (defina PROMPT_AI_TYPE como CURSOR ou CLAUDE_CODE).'
+      );
     }
 
     this.config = {
-      cursorApiToken: config.cursorApiToken,
+      cursorApiToken: aiToken, // Keep for backward compatibility
+      aiProviderType: config.aiProviderType,
+      apiUrl,
       githubToken: config.githubToken || '',
       repoOwner: config.repoOwner || '',
       repoName: config.repoName || '',
@@ -36,7 +53,8 @@ export class Pipeline {
     };
 
     // Initialize components
-    this.codeGenerator = new CodeGenerator(this.config.cursorApiToken);
+    // CodeGenerator now supports multiple AI providers via environment variables
+    this.codeGenerator = new CodeGenerator(aiToken, apiUrl);
     this.codeReviewer = new CodeReviewer(this.config.config);
 
     if (this.config.githubToken) {

@@ -6,8 +6,12 @@
  * Configuration for the Pipeline
  */
 export interface PipelineConfig {
-  /** Cursor API token for code generation */
-  cursorApiToken: string;
+  /** AI provider API token/key for code generation (legacy: cursorApiToken) */
+  cursorApiToken?: string;
+  /** AI provider type (CURSOR, CLAUDE_CODE) - defaults to PROMPT_AI_TYPE env var */
+  aiProviderType?: 'CURSOR' | 'CLAUDE_CODE';
+  /** AI provider API URL - defaults to PROMPT_API_URL env var or provider default */
+  apiUrl?: string;
   /** GitHub API token (optional) */
   githubToken?: string;
   /** Repository owner (required if using GitHub features) */
@@ -24,6 +28,24 @@ export interface PipelineConfig {
     lintRules?: string[];
     /** Auto-approve PRs that pass all checks */
     autoApprove?: boolean;
+  };
+}
+
+/**
+ * Internal configuration with required fields
+ */
+export interface PipelineConfigInternal {
+  cursorApiToken: string;
+  aiProviderType?: 'CURSOR' | 'CLAUDE_CODE';
+  apiUrl?: string;
+  githubToken: string;
+  repoOwner: string;
+  repoName: string;
+  config: {
+    solidRules: boolean;
+    atomicDesign: boolean;
+    lintRules: string[];
+    autoApprove: boolean;
   };
 }
 

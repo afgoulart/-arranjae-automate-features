@@ -25,5 +25,11 @@ export { CursorAPI } from './integrations/CursorAPI';
 export { GitHubAPI } from './integrations/GitHubAPI';
 export { GitAPI } from './integrations/GitAPI';
 
+// AI Provider exports
+export { AIProvider, AIProviderType } from './integrations/AIProvider';
+export { AIProviderFactory } from './integrations/AIProviderFactory';
+export { CursorProvider } from './integrations/providers/CursorProvider';
+export { ClaudeCodeProvider } from './integrations/providers/ClaudeCodeProvider';
+
 // Type exports
 export * from './types';

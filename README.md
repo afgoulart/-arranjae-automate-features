@@ -22,7 +22,12 @@ npm install @arranjae/automate-features
 
 ```bash
 # .env
-CURSOR_API_TOKEN=seu_token_aqui
+# Escolha o provedor de AI: CURSOR ou CLAUDE_CODE
+PROMPT_AI_TYPE=CURSOR
+PROMPT_AI_KEY=seu_token_ai_aqui
+PROMPT_API_URL=https://api.cursor.sh/v1  # Opcional
+
+# GitHub (opcional)
 GITHUB_TOKEN=seu_token_github_aqui
 ```
 
@@ -32,7 +37,10 @@ GITHUB_TOKEN=seu_token_github_aqui
 import { Pipeline } from '@arranjae/automate-features';
 
 const pipeline = new Pipeline({
-  cursorApiToken: process.env.CURSOR_API_TOKEN!,
+  // cursorApiToken é opcional se PROMPT_AI_KEY estiver definido
+  cursorApiToken: process.env.PROMPT_AI_KEY || process.env.CURSOR_API_TOKEN,
+  // apiUrl é opcional, sobrescreve PROMPT_API_URL e padrão do provedor
+  apiUrl: process.env.PROMPT_API_URL,
   githubToken: process.env.GITHUB_TOKEN,
   repoOwner: 'seu-usuario',
   repoName: 'seu-repositorio',
@@ -63,6 +71,7 @@ if (result.success) {
 ## Exemplos Rápidos
 
 ### GitHub Actions
+
 ```yaml
 - name: Generate code
   run: |
@@ -71,6 +80,7 @@ if (result.success) {
 ```
 
 ### Script Node.js
+
 ```javascript
 const { Pipeline } = require('@arranjae/automate-features');
 const pipeline = new Pipeline({
@@ -89,6 +99,7 @@ Veja mais exemplos em [docs/USAGE.md](./docs/USAGE.md).
 ## Estrutura do Bundle
 
 O pacote inclui:
+
 - ✅ **Arquivos compilados** (CommonJS + ES Modules)
 - ✅ **Arquivos TypeScript fonte** (`src/` e `dist/*.ts`)
 - ✅ **Definições de tipos** (`.d.ts`)

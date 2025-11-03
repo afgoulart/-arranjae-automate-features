@@ -15,26 +15,58 @@ npm install @arranjae/automate-features
 Crie um arquivo `.env` na raiz do seu projeto:
 
 ```env
-CURSOR_API_TOKEN=seu_token_cursor_aqui
+# Escolha o provedor de AI: CURSOR ou CLAUDE_CODE
+PROMPT_AI_TYPE=CURSOR
+PROMPT_AI_KEY=seu_token_ai_aqui
+PROMPT_API_URL=https://api.cursor.sh/v1  # Opcional, usa padrão do provedor se não fornecido
+
+# GitHub (opcional)
 GITHUB_TOKEN=seu_token_github_aqui
 ```
 
 Ou exporte as variáveis no seu ambiente:
 
 ```bash
-export CURSOR_API_TOKEN=seu_token_cursor_aqui
+export PROMPT_AI_TYPE=CURSOR  # ou CLAUDE_CODE
+export PROMPT_AI_KEY=seu_token_ai_aqui
+export PROMPT_API_URL=https://api.cursor.sh/v1  # Opcional
 export GITHUB_TOKEN=seu_token_github_aqui
 ```
 
+**Notas**:
+
+- `CURSOR_API_TOKEN` ainda funciona para compatibilidade.
+- `PROMPT_API_URL` é genérica e funciona para qualquer tipo de AI. Se não fornecida, usa o padrão do provedor.
+
 ### 2. Obter as Credenciais
 
-#### Cursor API Token
+#### Configuração de Provedor de AI
+
+**Para Cursor:**
+
 1. Acesse: `https://cursor.sh/settings`
 2. Navegue até a seção de API/Integrations
 3. Gere ou copie o token
-4. Adicione ao `.env` como `CURSOR_API_TOKEN`
+4. Configure:
+   ```env
+   PROMPT_AI_TYPE=CURSOR
+   PROMPT_AI_KEY=seu_token_cursor_aqui
+   ```
+
+**Para Claude Code:**
+
+1. Acesse: `https://console.anthropic.com/`
+2. Crie uma conta ou faça login
+3. Navegue até API Keys
+4. Gere uma nova API key
+5. Configure:
+   ```env
+   PROMPT_AI_TYPE=CLAUDE_CODE
+   PROMPT_AI_KEY=sua_claude_api_key_aqui
+   ```
 
 #### GitHub Token
+
 1. Acesse: `https://github.com/settings/tokens`
 2. Clique em "Generate new token" → "Generate new token (classic)"
 3. Selecione as permissões:
@@ -53,6 +85,7 @@ import { Pipeline } from '@arranjae/automate-features';
 
 const pipeline = new Pipeline({
   cursorApiToken: process.env.CURSOR_API_TOKEN!,
+  apiUrl: process.env.PROMPT_API_URL, // Opcional
   config: {
     solidRules: true,
     atomicDesign: false,
@@ -80,6 +113,7 @@ import { Pipeline } from '@arranjae/automate-features';
 
 const pipeline = new Pipeline({
   cursorApiToken: process.env.CURSOR_API_TOKEN!,
+  apiUrl: process.env.PROMPT_API_URL, // Opcional
   githubToken: process.env.GITHUB_TOKEN!,
   repoOwner: 'seu-usuario',
   repoName: 'seu-repositorio',
@@ -132,15 +166,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
-      
+
       - name: Install dependencies
         run: npm install @arranjae/automate-features
-      
+
       - name: Generate code
         env:
           CURSOR_API_TOKEN: ${{ secrets.CURSOR_API_TOKEN }}
@@ -166,6 +200,7 @@ jobs:
 ```
 
 **Como usar:**
+
 1. Vá em "Actions" no GitHub
 2. Selecione "Generate Code from Prompt"
 3. Clique em "Run workflow"
@@ -184,7 +219,7 @@ require('dotenv').config();
 
 async function main() {
   const prompt = process.argv[2];
-  
+
   if (!prompt) {
     console.error('Uso: node generate.js "seu prompt aqui"');
     process.exit(1);
@@ -203,7 +238,7 @@ async function main() {
   });
 
   console.log('🚀 Processando prompt...\n');
-  
+
   const result = await pipeline.process({
     prompt,
     createBranch: true,
@@ -232,6 +267,7 @@ main().catch(console.error);
 ```
 
 **Como usar:**
+
 ```bash
 node generate.js "Criar componente de botão reutilizável"
 ```
@@ -243,16 +279,16 @@ Crie um arquivo `Jenkinsfile`:
 ```groovy
 pipeline {
     agent any
-    
+
     environment {
         CURSOR_API_TOKEN = credentials('cursor-api-token')
         GITHUB_TOKEN = credentials('github-token')
     }
-    
+
     parameters {
         string(name: 'PROMPT', defaultValue: '', description: 'Descrição da feature')
     }
-    
+
     stages {
         stage('Generate Code') {
             steps {
@@ -293,27 +329,26 @@ pipeline {
 ### Caso 4: Uso Programático Avançado
 
 ```typescript
-import { 
-  Pipeline, 
-  CodeGenerator, 
+import {
+  Pipeline,
+  CodeGenerator,
   CodeReviewer,
   SolidValidator,
-  AtomicDesignValidator 
+  AtomicDesignValidator,
 } from '@arranjae/automate-features';
 
 // Usar componentes individualmente
 async function exemploAvancado() {
   // 1. Gerar código
   const codeGenerator = new CodeGenerator(process.env.CURSOR_API_TOKEN!);
-  const code = await codeGenerator.generate(
-    'Criar função de validação de email',
-    { language: 'typescript' }
-  );
+  const code = await codeGenerator.generate('Criar função de validação de email', {
+    language: 'typescript',
+  });
 
   // 2. Validar SOLID
   const solidValidator = new SolidValidator();
   const solidResult = await solidValidator.validate(code.code, 'src/utils/email.ts');
-  
+
   if (!solidResult.passed) {
     console.log('⚠️ Violações SOLID encontradas:');
     solidResult.issues.forEach(issue => {
@@ -331,7 +366,7 @@ async function exemploAvancado() {
     atomicDesign: true,
     lintRules: ['eslint'],
   });
-  
+
   const review = await reviewer.review(code.code, code.filePath);
   console.log('Review completo:', review);
 }
@@ -355,14 +390,14 @@ const rl = readline.createInterface({
 });
 
 async function askQuestion(question) {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     rl.question(question, resolve);
   });
 }
 
 async function main() {
   console.log('🚀 Optimized Process CLI\n');
-  
+
   const prompt = await askQuestion('Digite o prompt da feature: ');
   const createBranch = (await askQuestion('Criar branch? (s/n): ')).toLowerCase() === 's';
   const createPR = (await askQuestion('Criar PR? (s/n): ')).toLowerCase() === 's';
@@ -398,6 +433,7 @@ main().catch(console.error);
 ```
 
 Torne executável e use:
+
 ```bash
 chmod +x cli.js
 ./cli.js
@@ -409,15 +445,15 @@ chmod +x cli.js
 
 ```typescript
 interface PipelineConfig {
-  cursorApiToken: string;      // Obrigatório: Token da Cursor API
-  githubToken?: string;          // Opcional: Token do GitHub
-  repoOwner?: string;            // Opcional: Proprietário do repositório
-  repoName?: string;             // Opcional: Nome do repositório
+  cursorApiToken: string; // Obrigatório: Token da Cursor API
+  githubToken?: string; // Opcional: Token do GitHub
+  repoOwner?: string; // Opcional: Proprietário do repositório
+  repoName?: string; // Opcional: Nome do repositório
   config?: {
-    solidRules?: boolean;       // Validar SOLID (padrão: true)
-    atomicDesign?: boolean;      // Validar Atomic Design (padrão: true)
-    lintRules?: string[];        // Regras de lint (padrão: ['eslint'])
-    autoApprove?: boolean;       // Auto-aprovar PRs (padrão: false)
+    solidRules?: boolean; // Validar SOLID (padrão: true)
+    atomicDesign?: boolean; // Validar Atomic Design (padrão: true)
+    lintRules?: string[]; // Regras de lint (padrão: ['eslint'])
+    autoApprove?: boolean; // Auto-aprovar PRs (padrão: false)
   };
 }
 ```
@@ -426,12 +462,12 @@ interface PipelineConfig {
 
 ```typescript
 interface ProcessOptions {
-  prompt: string;                // Obrigatório: Descrição da feature
-  createBranch?: boolean;        // Criar branch (padrão: false)
-  createIssue?: boolean;         // Criar issue (padrão: false)
-  createPR?: boolean;            // Criar PR (padrão: false)
-  runCodeReview?: boolean;        // Executar review (padrão: false)
-  branchName?: string;           // Nome da branch (auto-gerado se não fornecido)
+  prompt: string; // Obrigatório: Descrição da feature
+  createBranch?: boolean; // Criar branch (padrão: false)
+  createIssue?: boolean; // Criar issue (padrão: false)
+  createPR?: boolean; // Criar PR (padrão: false)
+  runCodeReview?: boolean; // Executar review (padrão: false)
+  branchName?: string; // Nome da branch (auto-gerado se não fornecido)
 }
 ```
 
@@ -440,39 +476,43 @@ interface ProcessOptions {
 ### Frontend (React)
 
 ```
-"Criar componente Button reutilizável com variantes (primary, secondary, danger), 
+"Criar componente Button reutilizável com variantes (primary, secondary, danger),
 suporte a ícones e estados de loading, seguindo Atomic Design"
 ```
 
 ### Backend (Node.js)
 
 ```
-"Criar serviço de autenticação JWT com validação de token, refresh token, 
+"Criar serviço de autenticação JWT com validação de token, refresh token,
 e middleware de autenticação para Express"
 ```
 
 ### Full Stack
 
 ```
-"Criar feature completa de comentários: API RESTful com CRUD, 
+"Criar feature completa de comentários: API RESTful com CRUD,
 componente React com listagem infinita, e sistema de validação"
 ```
 
 ## Troubleshooting
 
 ### Erro: "Cursor API token is required"
+
 - Verifique se `CURSOR_API_TOKEN` está definido no `.env` ou como variável de ambiente
 
 ### Erro: "GitHub token is required"
+
 - Necessário apenas se usar funcionalidades do GitHub (branch, issue, PR)
 - Verifique se `GITHUB_TOKEN` está configurado
 
 ### Erro: "Failed to generate code"
+
 - Verifique se o token da Cursor API é válido
 - Verifique a conexão com a internet
 - Tente um prompt mais simples primeiro
 
 ### Review sempre falhando
+
 - Verifique as configurações de validação
 - Revise os logs para ver quais validações estão falhando
 - Considere desabilitar temporariamente algumas validações para debug
@@ -482,4 +522,3 @@ componente React com listagem infinita, e sistema de validação"
 - Veja [INTEGRATION.md](./INTEGRATION.md) para exemplos de integração em diferentes pipelines
 - Consulte [API.md](./API.md) para documentação completa da API
 - Leia [SOLID.md](./SOLID.md) e [ATOMIC_DESIGN.md](./ATOMIC_DESIGN.md) para entender as validações
-

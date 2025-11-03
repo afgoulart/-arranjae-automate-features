@@ -1,14 +1,25 @@
 import { GeneratedCode, GeneratorConfig } from '../types';
-import { CursorAPI } from '../integrations/CursorAPI';
+import { AIProvider } from '../integrations/AIProvider';
+import { AIProviderFactory } from '../integrations/AIProviderFactory';
 
 /**
- * Code generator using Cursor API
+ * Code generator using AI providers (abstracted)
  */
 export class CodeGenerator {
-  private cursorAPI: CursorAPI;
+  private aiProvider: AIProvider;
 
-  constructor(cursorApiToken: string) {
-    this.cursorAPI = new CursorAPI(cursorApiToken);
+  constructor(aiProviderOrToken?: AIProvider | string, apiUrl?: string) {
+    if (!aiProviderOrToken) {
+      // Try to create from environment variables
+      this.aiProvider = AIProviderFactory.createFromEnv(apiUrl);
+    } else if (typeof aiProviderOrToken === 'string') {
+      // Legacy support: if string provided, try to create from env or use as Cursor token
+      const providerType = (process.env.PROMPT_AI_TYPE || 'CURSOR').toUpperCase();
+      this.aiProvider = AIProviderFactory.create(providerType as any, aiProviderOrToken, apiUrl);
+    } else {
+      // AIProvider instance provided
+      this.aiProvider = aiProviderOrToken;
+    }
   }
 
   /**
@@ -16,7 +27,7 @@ export class CodeGenerator {
    */
   async generate(prompt: string, config?: GeneratorConfig): Promise<GeneratedCode> {
     try {
-      const code = await this.cursorAPI.generateCode(prompt, config);
+      const code = await this.aiProvider.generateCode(prompt, config);
 
       return {
         code,

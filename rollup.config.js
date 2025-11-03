@@ -1,7 +1,7 @@
-import typescript from '@rollup/plugin-typescript';
-import { nodeResolve } from '@rollup/plugin-node-resolve';
+const typescript = require('@rollup/plugin-typescript');
+const { nodeResolve } = require('@rollup/plugin-node-resolve');
 
-export default {
+module.exports = {
   input: 'src/index.ts',
   output: {
     file: 'dist/index.esm.js',

@@ -11,22 +11,28 @@ require('dotenv').config();
 
 async function main() {
   const prompt = process.argv[2];
-  
+
   if (!prompt) {
     console.error('❌ Uso: node examples/basic-usage.js "seu prompt aqui"');
     process.exit(1);
   }
 
-  if (!process.env.CURSOR_API_TOKEN) {
-    console.error('❌ CURSOR_API_TOKEN não encontrado no .env');
+  const aiKey = process.env.PROMPT_AI_KEY || process.env.CURSOR_API_TOKEN;
+
+  if (!aiKey) {
+    console.error('❌ PROMPT_AI_KEY ou CURSOR_API_TOKEN não encontrado no .env');
+    console.error('   Configure PROMPT_AI_TYPE (CURSOR ou CLAUDE_CODE) e PROMPT_AI_KEY');
     process.exit(1);
   }
 
+  const aiType = process.env.PROMPT_AI_TYPE || 'CURSOR';
+  console.log(`🤖 Usando provedor de AI: ${aiType}\n`);
   console.log('🚀 Iniciando processo de geração...\n');
   console.log(`📝 Prompt: ${prompt}\n`);
 
   const pipeline = new Pipeline({
-    cursorApiToken: process.env.CURSOR_API_TOKEN,
+    cursorApiToken: aiKey, // Usa PROMPT_AI_KEY ou CURSOR_API_TOKEN
+    apiUrl: process.env.PROMPT_API_URL, // Opcional, sobrescreve padrão
     githubToken: process.env.GITHUB_TOKEN,
     repoOwner: process.env.GITHUB_REPO_OWNER,
     repoName: process.env.GITHUB_REPO_NAME,
@@ -48,33 +54,33 @@ async function main() {
 
     if (result.success) {
       console.log('\n✅ Processo concluído com sucesso!\n');
-      
+
       if (result.code) {
         console.log('📄 Código gerado:');
         console.log('─'.repeat(50));
         console.log(result.code.substring(0, 200) + (result.code.length > 200 ? '...' : ''));
         console.log('─'.repeat(50));
       }
-      
+
       if (result.branchName) {
         console.log(`🌿 Branch criada: ${result.branchName}`);
       }
-      
+
       if (result.issueNumber) {
         console.log(`📋 Issue criada: #${result.issueNumber}`);
       }
-      
+
       if (result.prNumber) {
         console.log(`🔀 Pull Request criada: #${result.prNumber}`);
       }
-      
+
       if (result.review) {
         console.log(`\n📊 Code Review:`);
         console.log(`   Status: ${result.review.passed ? '✅ Passou' : '❌ Falhou'}`);
         if (result.review.summary) {
           console.log(`   ${result.review.summary}`);
         }
-        
+
         if (result.review.issues && result.review.issues.length > 0) {
           console.log(`\n   Issues encontrados:`);
           result.review.issues.slice(0, 5).forEach((issue, index) => {
